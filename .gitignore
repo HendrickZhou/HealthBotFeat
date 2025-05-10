@@ -172,3 +172,10 @@ cython_debug/
 
 # PyPI configuration file
 .pypirc
+
+
+# R data
+*.rds
+
+# data processing folder
+data/

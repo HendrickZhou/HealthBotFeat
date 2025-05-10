@@ -47,6 +47,7 @@ def query_steps_7d(user_id: str) -> int | None:
     return int(points[0]['sum']) if points else None
 
 # ----- FastAPI Endpoint ----- #
+# summary of the reponse
 @app.get("/features", response_model=FeatureResponse)
 def get_features(user_id: str):
     cache_key = f"features:{user_id}"
@@ -66,6 +67,16 @@ def get_features(user_id: str):
         redis_client.setex(cache_key, 60, str(result.dict()))
 
     return result
+
+@app.get("/features/sedtime", response_model=SedTimeResponse)
+def get_sedtime(user_id: str):
+    pass
+
+@app.get("/features/uptime", response_model=UptimeResponse)
+def get_uptime(user_id: str):
+    pass
+
+
 
 # ----- TODO: gRPC Extensibility ----- #
 # This module is structured so you can plug in gRPC interface later
