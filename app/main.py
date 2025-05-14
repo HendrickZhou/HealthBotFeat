@@ -1,20 +1,23 @@
-# Feature Platform: FastAPI + InfluxDB + Redis-ready + gRPC-extensible
-
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from influxdb import InfluxDBClient
+from influxdb_client_3 import InfluxDBClient3
 import os
 import redis
+import pandas as pd
 
-app = FastAPI(title="Feature Platform", description="InfluxDB + FastAPI + Redis-ready")
+app = FastAPI(title="Feature Platform", description="InfluxDB 3.0 + FastAPI + Redis-ready")
 
-# ----- InfluxDB Setup ----- #
-INFLUX_HOST = os.getenv("INFLUX_HOST", "localhost")
-INFLUX_PORT = int(os.getenv("INFLUX_PORT", 8086))
-INFLUX_DB = os.getenv("INFLUX_DB", "health")
+# ----- InfluxDB 3.0 Setup ----- #
+INFLUX_URL = os.getenv("INFLUX_URL")
+INFLUX_TOKEN = os.getenv("INFLUX_TOKEN")
+INFLUX_ORG = os.getenv("INFLUX_ORG")  # Optional, can be left blank for OSS
+INFLUX_DATABASE = os.getenv("INFLUX_DATABASE")  # Replace with bucket name
 
-influx = InfluxDBClient(host=INFLUX_HOST, port=INFLUX_PORT)
-influx.switch_database(INFLUX_DB)
+client = InfluxDBClient3(
+    token=INFLUX_TOKEN,
+    host=INFLUX_URL,
+    database=INFLUX_DATABASE
+)
 
 # ----- Redis (optional, for caching) ----- #
 USE_REDIS = os.getenv("USE_REDIS", "false").lower() == "true"
@@ -27,27 +30,26 @@ class FeatureResponse(BaseModel):
     avg_hr_1d: float | None = None
     steps_7d: int | None = None
 
-# ----- Query Logic (with optional Redis caching) ----- #
+# ----- Query Logic (with InfluxDB 3.0 SQL) ----- #
 def query_avg_heart_rate(user_id: str) -> float | None:
-    q = f"""
-        SELECT MEAN(heart_rate) FROM health_metrics
-        WHERE user_id = '{user_id}' AND time > now() - 1d
+    sql = f"""
+        SELECT MEAN(heart_rate) AS mean_hr
+        FROM health_metrics
+        WHERE time > now() - interval '1 day' AND user_id = '{user_id}'
     """
-    res = influx.query(q)
-    points = list(res.get_points())
-    return points[0]['mean'] if points else None
+    df: pd.DataFrame = client.query(query=sql)
+    return float(df["mean_hr"].iloc[0]) if not df.empty else None
 
 def query_steps_7d(user_id: str) -> int | None:
-    q = f"""
-        SELECT SUM(steps) FROM health_metrics
-        WHERE user_id = '{user_id}' AND time > now() - 7d
+    sql = f"""
+        SELECT SUM(steps) AS total_steps
+        FROM health_metrics
+        WHERE time > now() - interval '7 days' AND user_id = '{user_id}'
     """
-    res = influx.query(q)
-    points = list(res.get_points())
-    return int(points[0]['sum']) if points else None
+    df: pd.DataFrame = client.query(query=sql)
+    return int(df["total_steps"].iloc[0]) if not df.empty else None
 
 # ----- FastAPI Endpoint ----- #
-# summary of the reponse
 @app.get("/features", response_model=FeatureResponse)
 def get_features(user_id: str):
     cache_key = f"features:{user_id}"
@@ -67,18 +69,4 @@ def get_features(user_id: str):
         redis_client.setex(cache_key, 60, str(result.dict()))
 
     return result
-
-@app.get("/features/sedtime", response_model=SedTimeResponse)
-def get_sedtime(user_id: str):
-    pass
-
-@app.get("/features/uptime", response_model=UptimeResponse)
-def get_uptime(user_id: str):
-    pass
-
-
-
-# ----- TODO: gRPC Extensibility ----- #
-# This module is structured so you can plug in gRPC interface later
-# Simply abstract the query functions into a service class, and call from both FastAPI and gRPC
 

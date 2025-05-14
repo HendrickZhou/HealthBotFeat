@@ -1,0 +1,5 @@
+fastapi[standard]
+pydantic
+redis
+influxdb3-python
+pandas
