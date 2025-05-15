@@ -1,5 +1,5 @@
 fastapi[standard]
 pydantic
 redis
-influxdb3-python
+influxdb-client
 pandas

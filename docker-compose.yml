@@ -27,6 +27,8 @@ services:
       - INFLUX_TOKEN=mytoken
       - INFLUX_ORG=MyOrg
       - INFLUX_BUCKET=health_data
+    volumes:
+      - ./app:/app
     depends_on:
       - influxdb
     profiles: ["app"]  # Only starts when "app" profile is activated
