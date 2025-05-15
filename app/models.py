@@ -1,11 +1,12 @@
 from pydantic import BaseModel
-from typing import List
 
-class StepTimeQuery(BaseModel):
+class StepTimeFeatureQuery(BaseModel):
     userID: str
-    start: str = "1970-01-01T00:00:00Z"
-    stop: str = "now()"
+    window: str = "1h"
+    now: str | None = None  # Optional override for "current time"
 
-class StepTimeRecord(BaseModel):
-    steptime: float
-
+class StepTimeFeatureResponse(BaseModel):
+    userID: str
+    window: str
+    reference_time: str
+    mean_steptime: float

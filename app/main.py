@@ -1,11 +1,11 @@
 import logging_config 
 from fastapi import FastAPI, Query
 from typing import List
-from models import StepTimeQuery, StepTimeRecord
+from models import StepTimeFeatureQuery, StepTimeFeatureResponse
 from query import query_steptime_data
 
 app = FastAPI()
-@app.get("/steptime", response_model=List[StepTimeRecord])
-def get_steptime(query: StepTimeQuery = Query(...)):
-    return query_steptime_data(query)
 
+@app.get("/features/steptime", response_model=StepTimeFeatureResponse)
+def get_steptime_feature(userID: str, window: str = "1h", now: str | None = None):
+    return query_steptime_data(StepTimeFeatureQuery(userID=userID, window=window, now=now))

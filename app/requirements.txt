@@ -3,3 +3,4 @@ pydantic
 redis
 influxdb-client
 pandas
+python-dateutil
