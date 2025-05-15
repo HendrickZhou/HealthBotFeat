@@ -1,23 +1,20 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from influxdb_client_3 import InfluxDBClient3
+from influxdb_client import InfluxDBClient, Point
+from influxdb_client.client.write_api import SYNCHRONOUS
 import os
 import redis
-import pandas as pd
 
-app = FastAPI(title="Feature Platform", description="InfluxDB 3.0 + FastAPI + Redis-ready")
+app = FastAPI(title="Feature Platform", description="InfluxDB 2.0 + FastAPI + Redis-ready")
 
-# ----- InfluxDB 3.0 Setup ----- #
-INFLUX_URL = os.getenv("INFLUX_URL")
-INFLUX_TOKEN = os.getenv("INFLUX_TOKEN")
-INFLUX_ORG = os.getenv("INFLUX_ORG")  # Optional, can be left blank for OSS
-INFLUX_DATABASE = os.getenv("INFLUX_DATABASE")  # Replace with bucket name
+# ----- InfluxDB 2.0 Setup ----- #
+INFLUX_URL = os.getenv("INFLUX_URL", "http://localhost:8086")
+INFLUX_TOKEN = os.getenv("INFLUX_TOKEN", "mytoken")
+INFLUX_ORG = os.getenv("INFLUX_ORG", "MyOrg")
+INFLUX_BUCKET = os.getenv("INFLUX_BUCKET", "health_data")
 
-client = InfluxDBClient3(
-    token=INFLUX_TOKEN,
-    host=INFLUX_URL,
-    database=INFLUX_DATABASE
-)
+influx_client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
+query_api = influx_client.query_api()
 
 # ----- Redis (optional, for caching) ----- #
 USE_REDIS = os.getenv("USE_REDIS", "false").lower() == "true"
@@ -30,24 +27,36 @@ class FeatureResponse(BaseModel):
     avg_hr_1d: float | None = None
     steps_7d: int | None = None
 
-# ----- Query Logic (with InfluxDB 3.0 SQL) ----- #
+# ----- Query Logic (with Flux) ----- #
 def query_avg_heart_rate(user_id: str) -> float | None:
-    sql = f"""
-        SELECT MEAN(heart_rate) AS mean_hr
-        FROM health_metrics
-        WHERE time > now() - interval '1 day' AND user_id = '{user_id}'
-    """
-    df: pd.DataFrame = client.query(query=sql)
-    return float(df["mean_hr"].iloc[0]) if not df.empty else None
+    query = f'''
+    from(bucket: "{INFLUX_BUCKET}")
+      |> range(start: -1d)
+      |> filter(fn: (r) => r["_measurement"] == "health_metrics")
+      |> filter(fn: (r) => r["user_id"] == "{user_id}")
+      |> filter(fn: (r) => r["_field"] == "heart_rate")
+      |> mean()
+    '''
+    tables = query_api.query(query)
+    for table in tables:
+        for record in table.records:
+            return float(record.get_value())
+    return None
 
 def query_steps_7d(user_id: str) -> int | None:
-    sql = f"""
-        SELECT SUM(steps) AS total_steps
-        FROM health_metrics
-        WHERE time > now() - interval '7 days' AND user_id = '{user_id}'
-    """
-    df: pd.DataFrame = client.query(query=sql)
-    return int(df["total_steps"].iloc[0]) if not df.empty else None
+    query = f'''
+    from(bucket: "{INFLUX_BUCKET}")
+      |> range(start: -7d)
+      |> filter(fn: (r) => r["_measurement"] == "health_metrics")
+      |> filter(fn: (r) => r["user_id"] == "{user_id}")
+      |> filter(fn: (r) => r["_field"] == "steps")
+      |> sum()
+    '''
+    tables = query_api.query(query)
+    for table in tables:
+        for record in table.records:
+            return int(record.get_value())
+    return None
 
 # ----- FastAPI Endpoint ----- #
 @app.get("/features", response_model=FeatureResponse)
