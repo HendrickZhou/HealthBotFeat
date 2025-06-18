@@ -1,7 +1,7 @@
 import logging
 from influxdb_client import InfluxDBClient
 from typing import List
-from models import WindowTimeFeatureQuery, WindowTimeFeatureResponse
+from models import *
 import os
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -37,8 +37,11 @@ def parse_duration(s: str) -> timedelta:
         return timedelta(days=int(s[:-1]))
     raise ValueError("Unsupported window format. Use '1h', '24h', '7d', etc.")
 
+def parse_now(now_str: str | None) -> datetime:
+    return dateutil.parser.isoparse(now_str) if now_str else datetime.now(datetime.timezone.utc)
+
 def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureResponse:
-    now = dateutil.parser.isoparse(query.now) if query.now else datetime.utcnow()
+    now = parse_now(query.now)
     duration = parse_duration(query.window)
 
     # be careful this is the only format that would work
@@ -75,4 +78,50 @@ def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureRespons
         window=query.window,
         reference_time=stop,
         mean_time=0.0
+    )
+
+def query_sq_data(query: DailyFeatureQuery) -> DailyFeatureResponse:
+    now = parse_now(query.now)
+
+    # Apply 2 AM cutoff logic
+    if now.hour < 2:
+        sleep_day = (now - timedelta(days=1)).date()
+    else:
+        sleep_day = now.date()
+
+    # Time range: from 00:00 of sleep_day to 00:00 of next day
+    day_start = datetime.combine(sleep_day, datetime.min.time())
+    day_end = day_start + timedelta(days=1)
+
+    # Format time as: 2025-06-18T00:00:00Z
+    start = day_start.replace(tzinfo=None).isoformat() + "Z"
+    stop = day_end.replace(tzinfo=None).isoformat() + "Z"
+
+    # Flux query
+    flux = f'''
+    from(bucket: "{INFLUX_BUCKET}")
+      |> range(start: {start}, stop: {stop})
+      |> filter(fn: (r) =>
+          r._measurement == "sleep_quality" and
+          r.userID == "{query.userID}"
+      )
+      |> last()
+    '''
+
+    result = query_api.query(flux)
+
+    for table in result:
+        for record in table.records:
+            return DailyFeatureResponse(
+                userID=query.userID,
+                reference_time=record.get_time().isoformat(),
+                value=record.get_value(),
+                found=True
+            )
+
+    return DailyFeatureResponse(
+        userID=query.userID,
+        reference_time=start,
+        value=None,
+        found=False
     )
