@@ -5,8 +5,19 @@ Feature Storage service for health bot
 # for testing script with interactive pdb
 docker-compose run --rm --service-ports feature-api
 # one example line for testing the fastAPI
-curl -X GET "http://localhost:8000/steptime?userID=101&start=2021-01-26T00:00:00Z&stop=2022-01-26T23:59:59Z"
+curl -X GET "http://localhost:8000/features/standtime?userID=101&now=2021-01-18T13:42:44.000Z"
 
+# docker related
+// rebuild 
+docker-compose build feature-api
+// up profile
+docker-compose --profile app up -d
+or
+docker-compose up -d feature-api
+// force clean start
+docker-compose down
+docker-compose build feature-api
+docker-compose up -d
 
 # for migrating the hostmachine for now:
 you need to create external network: shared-influx-network

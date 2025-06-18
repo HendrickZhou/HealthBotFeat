@@ -49,7 +49,7 @@ def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureRespons
     from(bucket: "{os.getenv("INFLUX_BUCKET")}")
       |> range(start: {start}, stop: {stop})
       |> filter(fn: (r) =>
-          r._measurement == "{query.fType}" and
+          r._measurement == "{query.fType.value}" and
           r.userID == "{query.userID}"
       )
       |> group()
@@ -57,8 +57,11 @@ def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureRespons
     '''
 
     logger.info(f"Running windowed query for userID={query.userID}, window={query.window}, now={stop}")
+    logger.info(f"running flux script:{flux}")
     result = query_api.query(flux)
 
+    # import pdb; pdb.set_trace()
+    logger.info(f"query result: {result}")
     for table in result:
         for record in table.records:
             return WindowTimeFeatureResponse(
