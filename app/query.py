@@ -1,7 +1,7 @@
 import logging
 from influxdb_client import InfluxDBClient
 from typing import List
-from models import StepTimeFeatureQuery, StepTimeFeatureResponse
+from models import WindowTimeFeatureQuery, WindowTimeFeatureResponse
 import os
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -18,6 +18,16 @@ INFLUX_BUCKET = "health_data"
 client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
 query_api = client.query_api()
 
+"""
+    from(bucket: "health_data")
+      |> range(start: 0)
+      |> filter(fn: (r) =>
+          r._measurement == "sed_time" and
+          r.userID == "101"
+      )
+      |> group()
+      |> mean()
+"""
 # Util
 def parse_duration(s: str) -> timedelta:
     # basic parser for "1h", "24h", "7d"
@@ -27,7 +37,7 @@ def parse_duration(s: str) -> timedelta:
         return timedelta(days=int(s[:-1]))
     raise ValueError("Unsupported window format. Use '1h', '24h', '7d', etc.")
 
-def query_steptime_data(query: StepTimeFeatureQuery) -> StepTimeFeatureResponse:
+def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureResponse:
     now = dateutil.parser.isoparse(query.now) if query.now else datetime.utcnow()
     duration = parse_duration(query.window)
 
@@ -39,9 +49,8 @@ def query_steptime_data(query: StepTimeFeatureQuery) -> StepTimeFeatureResponse:
     from(bucket: "{os.getenv("INFLUX_BUCKET")}")
       |> range(start: {start}, stop: {stop})
       |> filter(fn: (r) =>
-          r._measurement == "step_time" and
-          r.userID == "{query.userID}" and
-          r._field == "steptime"
+          r._measurement == "{query.fType}" and
+          r.userID == "{query.userID}"
       )
       |> group()
       |> mean()
@@ -52,15 +61,15 @@ def query_steptime_data(query: StepTimeFeatureQuery) -> StepTimeFeatureResponse:
 
     for table in result:
         for record in table.records:
-            return StepTimeFeatureResponse(
+            return WindowTimeFeatureResponse(
                 userID=query.userID,
                 window=query.window,
                 reference_time=stop,
-                mean_steptime=record.get_value()
+                mean_time=record.get_value()
             )
-    return StepTimeFeatureResponse(
+    return WindowTimeFeatureResponse(
         userID=query.userID,
         window=query.window,
         reference_time=stop,
-        mean_steptime=0.0
+        mean_time=0.0
     )

@@ -179,3 +179,7 @@ cython_debug/
 
 # data processing folder
 data/
+
+# macOS system files
+.DS_Store
+**/.DS_Store
