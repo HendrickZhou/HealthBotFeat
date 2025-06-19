@@ -1,6 +1,11 @@
 #HealthBotFeat
 Feature Storage service for health bot
 
+# setup 
+create docker network and volume first
+
+# design note
+using external volume due the convenience of development
 
 # for testing script with interactive pdb
 docker-compose run --rm --service-ports feature-api

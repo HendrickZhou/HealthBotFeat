@@ -8,4 +8,4 @@ curl -X GET "http://localhost:8000/features/standtime?userID=101&window=4d&now=2
 
 curl -X GET "http://localhost:8000/features/standtime?userID=101&window=4d&now=2021-01-19T22:42:44.000Z"
 
-
+curl -X GET "http://localhost:8000/features/sq?userID=101&now=2021-01-20T22:42:44.000Z"
