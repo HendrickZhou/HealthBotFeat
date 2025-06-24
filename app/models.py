@@ -31,3 +31,17 @@ class DailyFeatureResponse(BaseModel):
     reference_time: str
     value: Optional[float] = None   # allow None if not found
     found: bool = True              # indicator
+
+
+class DemographicResponse(BaseModel):
+    user_id: str
+    dob: Optional[str]
+    sex: Optional[int]
+    ethnicity: Optional[dict]  # or make this a nested model if you want
+    married: Optional[int]
+    livealone: Optional[int]
+    edu: Optional[int]
+    prevExperi: Optional[int]
+    BMI: Optional[float]
+    total_days: Optional[int]
+    age_enrolled: Optional[int]
