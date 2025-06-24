@@ -15,7 +15,21 @@ services:
       - DOCKER_INFLUXDB_INIT_ADMIN_TOKEN=mytoken
     # No profile specified - this service starts by default
     networks:
-      - shared-influx-network
+      - shared-network
+
+  mongodb:
+    image: mongodb/mongodb-community-server:6.0-ubi8
+    container_name: mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - infra_mongo-data:/data/db
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=root
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+    networks:
+      - shared-network
 
   feature-api:
     build: ./app/
@@ -28,19 +42,21 @@ services:
       - INFLUX_ORG=MyOrg
       - INFLUX_BUCKET=health_data
       - ENV=dev
+      - MONGO_URI=mongodb://root:secret@mongodb:27017
     volumes:
       - ./app:/app
     depends_on:
       - influxdb
     profiles: ["app"]  # Only starts when "app" profile is activated
     networks:
-      - shared-influx-network
+      - shared-network
 
 networks:
-  shared-influx-network:
-    name: shared-influx-network  # Named network instead of external
+  shared-network:
+    name: shared-network  # Named network instead of external
     external: true
 
 volumes:
   infra_influxdb-data:
     external: true
+  infra_mongo-data:

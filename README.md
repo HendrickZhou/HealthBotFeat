@@ -13,6 +13,9 @@ docker-compose run --rm --service-ports feature-api
 curl -X GET "http://localhost:8000/features/standtime?userID=101&now=2021-01-18T13:42:44.000Z"
 
 # docker related
+// take down the whole thing:
+docker compose --profile app
+down
 // rebuild 
 docker-compose build feature-api
 // up profile
