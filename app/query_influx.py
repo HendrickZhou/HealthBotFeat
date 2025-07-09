@@ -71,13 +71,13 @@ def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureRespons
                 userID=query.userID,
                 window=query.window,
                 reference_time=stop,
-                mean_time=record.get_value()
+                mean=record.get_value()
             )
     return WindowTimeFeatureResponse(
         userID=query.userID,
         window=query.window,
         reference_time=stop,
-        mean_time=0.0
+        mean=0.0
     )
 
 def query_sq_data(query: DailyFeatureQuery) -> DailyFeatureResponse:

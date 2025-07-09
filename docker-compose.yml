@@ -47,6 +47,7 @@ services:
       - ./app:/app
     depends_on:
       - influxdb
+      - mongodb
     profiles: ["app"]  # Only starts when "app" profile is activated
     networks:
       - shared-network

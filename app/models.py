@@ -2,11 +2,13 @@ from pydantic import BaseModel
 from typing import Optional
 from enum import Enum
 
+# the str correspond to the measurement name for influxdb query
 class FeatEnum(str, Enum):
     step_time = "step_time"
     stand_time = "stand_time"
     sed_time = "sed_time"
     upr_time = "upr_time"
+    step_cnt = "stepcount"
 
 # Query Type
 class WindowTimeFeatureQuery(BaseModel):
@@ -24,7 +26,7 @@ class WindowTimeFeatureResponse(BaseModel):
     userID: str
     window: str
     reference_time: str
-    mean_time: float
+    mean: float
 
 class DailyFeatureResponse(BaseModel):
     userID: str
@@ -45,3 +47,5 @@ class DemographicResponse(BaseModel):
     BMI: Optional[float]
     total_days: Optional[int]
     age_enrolled: Optional[int]
+
+# TODO: deviations based feature
