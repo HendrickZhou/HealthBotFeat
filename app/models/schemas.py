@@ -10,6 +10,20 @@ class FeatEnum(str, Enum):
     upr_time = "upr_time"
     step_cnt = "stepcount"
 
+class EMAEnum(str, Enum):
+    calm = "calm"
+    tired = "tired"
+    lonely = "lonely"
+    pain = "pain"
+    control = "control"
+    feel = "feel"
+    wherenow = "where_now"
+    whowithnow = "whowith_now"
+    naffect = "negative_affect"
+    hrp = "high_arousal_pos"
+    pcog = "per_cog"
+    mindfulness = "mindfulness"
+
 # Query Type
 class WindowTimeFeatureQuery(BaseModel):
     userID: str
@@ -21,6 +35,11 @@ class DailyFeatureQuery(BaseModel):
     userID: str
     now: str | None = None
 
+class TimesBasedEMAQuery(BaseModel):
+    userID: str
+    type: EMAEnum
+    lastn: int = 1
+
 # Response Type
 class WindowTimeFeatureResponse(BaseModel):
     userID: str
@@ -28,15 +47,18 @@ class WindowTimeFeatureResponse(BaseModel):
     reference_time: str
     mean: float
 
+class TimesBasedResponse(BaseModel):
+    userID: str
+    value: float
+
 class DailyFeatureResponse(BaseModel):
     userID: str
     reference_time: str
     value: Optional[float] = None   # allow None if not found
     found: bool = True              # indicator
 
-
 class DemographicResponse(BaseModel):
-    user_id: str
+    userID: str
     dob: Optional[str]
     sex: Optional[int]
     ethnicity: Optional[dict]  # or make this a nested model if you want
@@ -47,5 +69,6 @@ class DemographicResponse(BaseModel):
     BMI: Optional[float]
     total_days: Optional[int]
     age_enrolled: Optional[int]
+
 
 # TODO: deviations based feature

@@ -1,7 +1,7 @@
 import logging
 from influxdb_client import InfluxDBClient
 from typing import List
-from models import *
+from models.schemas import *
 import os
 from datetime import datetime, timedelta
 import dateutil.parser
@@ -39,6 +39,9 @@ def parse_duration(s: str) -> timedelta:
 
 def parse_now(now_str: str | None) -> datetime:
     return dateutil.parser.isoparse(now_str) if now_str else datetime.now(datetime.timezone.utc)
+
+def query_ema_lastn(query: TimesBasedEMAQuery) -> List[TimesBasedResponse]:
+    pass
 
 def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureResponse:
     now = parse_now(query.now)

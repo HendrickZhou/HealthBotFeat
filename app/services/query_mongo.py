@@ -13,4 +13,4 @@ def query_demographics(user_id: str) -> dict | None:
     if not user_doc:
         return None
     user_doc.pop("_id", None)
-    return {"user_id": user_id, **user_doc}
+    return {"userID": user_id, **user_doc}
