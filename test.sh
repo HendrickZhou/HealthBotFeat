@@ -13,7 +13,7 @@
 # curl -X GET "http://localhost:8000/api/features/stepcount?userID=101&window=4d&now=2021-01-19T22:42:44.000Z"
 
 
-curl -X GET "http://localhost:8000/api/features/pa?type=stand_time&userID=101&now=2021-01-18T13:42:44.000Z"
+curl -X GET "http://localhost:8000/api/features/pa?type=stand_time&userID=101&now=2021-01-15T13:42:44.000Z"
 echo -e "\n"
 
 curl -X GET "http://localhost:8000/api/features/pa?type=step_time&userID=101&window=1d&now=2021-01-19T22:42:44.000Z"
@@ -52,3 +52,7 @@ for type in "${TYPES[@]}"; do
   curl -X GET "http://localhost:8000/api/features/ema?userID=${USER_ID}&type=${type}&lastn=${LASTN}&now=${NOW}"
   echo -e "\n"
 done
+
+
+# aggeragted
+curl -X GET "http://localhost:8000/api/features/agg?&userID=101&lastn=3&now=2021-01-19T22:42:44.000Z"

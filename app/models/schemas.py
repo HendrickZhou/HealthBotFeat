@@ -32,6 +32,20 @@ class MeanPASummary(BaseModel):
     uprtime: float
     stepcount: float
 
+class EMASummary(BaseModel):
+    calm: float
+    tired: float
+    lonely: float
+    pain: float
+    control: float
+    feel: float
+    wherenow: float
+    whowithnow: float
+    naffect : float
+    hrp : float
+    pcog : float
+    mindfulness : float
+
 # Query Type
 class AggwrapFeatureQuery(BaseModel):
     userID: str
@@ -69,6 +83,9 @@ class AggwrapFeatureResponse(BaseModel):
     timestamp: str
     last15: MeanPASummary
     last1h: MeanPASummary
+    next15: MeanPASummary
+    next1h: MeanPASummary
+    ema: EMASummary
 
 class WindowTimeFeatureResponse(BaseModel):
     userID: str

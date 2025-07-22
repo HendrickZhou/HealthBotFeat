@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 from models.schemas import *
-from services.query_influx import query_window_data, query_sq_data, query_ema_lastn
+from services.query_influx import query_window_data, query_sq_data, query_ema_lastn, get_aggregated_data
 from services.query_mongo import query_demographics
 from http.client import HTTPException
 from typing import List
@@ -15,25 +15,6 @@ from typing import List
 
 router = APIRouter()
 
-# @router.get("/steptime", response_model=WindowTimeFeatureResponse)
-# def get_steptime_feature(userID: str, window: str = "1h", now: str | None = None):
-#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.step_time))
-
-# @router.get("/sedtime", response_model=WindowTimeFeatureResponse)
-# def get_sedtime_feature(userID: str, window: str = "1h", now: str | None = None):
-#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.sed_time))
-
-# @router.get("/standtime", response_model=WindowTimeFeatureResponse)
-# def get_standtime_feature(userID: str, window: str = "1h", now: str | None = None):
-#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.stand_time))
-
-# @router.get("/uprtime", response_model=WindowTimeFeatureResponse)
-# def get_uprtime_feature(userID: str, window: str = "1h", now: str | None = None):
-#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.upr_time))
-
-# @router.get("/stepcount", response_model=WindowTimeFeatureResponse)
-# def get_stepcnt_feature(userID: str, window: str = "1h", now: str | None = None):
-#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.step_cnt))
 
 # TODO probabliy seperate the Eum definition here
 @router.get("/pa", response_model=WindowTimeFeatureResponse)
@@ -55,3 +36,30 @@ def get_demographics(user_id: str):
 @router.get("/ema", response_model=List[TimesBasedResponse])
 def get_ema(userID: str, type: EMAEnum, lastn: int = 1, now: str | None = None):
     return query_ema_lastn(TimesBasedEMAQuery(userID=userID, type=type, lastn=lastn, now=now))
+
+@router.get("/agg", response_model=List[AggwrapFeatureResponse])
+def get_agg(userID: str, lastn: int = 1, now: str | None = None):
+    return get_aggregated_data(AggwrapFeatureQuery(userID=userID, now=now, lastn=lastn))
+
+
+
+
+# @router.get("/steptime", response_model=WindowTimeFeatureResponse)
+# def get_steptime_feature(userID: str, window: str = "1h", now: str | None = None):
+#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.step_time))
+
+# @router.get("/sedtime", response_model=WindowTimeFeatureResponse)
+# def get_sedtime_feature(userID: str, window: str = "1h", now: str | None = None):
+#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.sed_time))
+
+# @router.get("/standtime", response_model=WindowTimeFeatureResponse)
+# def get_standtime_feature(userID: str, window: str = "1h", now: str | None = None):
+#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.stand_time))
+
+# @router.get("/uprtime", response_model=WindowTimeFeatureResponse)
+# def get_uprtime_feature(userID: str, window: str = "1h", now: str | None = None):
+#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.upr_time))
+
+# @router.get("/stepcount", response_model=WindowTimeFeatureResponse)
+# def get_stepcnt_feature(userID: str, window: str = "1h", now: str | None = None):
+#     return query_window_data(WindowTimeFeatureQuery(userID=userID, window=window, now=now, fType=PAEnum.step_cnt))
