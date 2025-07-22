@@ -1,12 +1,10 @@
 from pymongo import MongoClient
+from config.setting import settings
 import os
 
-MONGO_URI = os.getenv("MONGO_URI", "mongodb://root:secret@localhost:27017")
-DB_NAME = "demographic"
-COLLECTION_NAME = "users"
 
-client = MongoClient(MONGO_URI)
-collection = client[DB_NAME][COLLECTION_NAME]
+client = MongoClient(settings.mongo_uri)
+collection = client[settings.mongo_db_name][settings.mongo_collection_name]
 
 def query_demographics(user_id: str) -> dict | None:
     user_doc = collection.find_one({"_id": user_id})

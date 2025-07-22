@@ -1,5 +1,6 @@
 import logging
 from influxdb_client import InfluxDBClient
+from config.setting import settings
 from typing import List
 from models.schemas import *
 import os
@@ -10,24 +11,15 @@ import dateutil.parser
 logger = logging.getLogger(__name__)
 
 # InfluxDB setup
-INFLUX_URL = os.getenv("INFLUX_URL", "http://localhost:8086")
-INFLUX_TOKEN = os.getenv("INFLUX_TOKEN", "mytoken")
-INFLUX_ORG = os.getenv("INFLUX_ORG", "MyOrg")
 INFLUX_BUCKET = "health_data"
 
-client = InfluxDBClient(url=INFLUX_URL, token=INFLUX_TOKEN, org=INFLUX_ORG)
+client = InfluxDBClient(
+    url=settings.influx_url,
+    token=settings.influx_token,
+    org=settings.influx_org,
+)
 query_api = client.query_api()
 
-"""
-    from(bucket: "health_data")
-      |> range(start: 0)
-      |> filter(fn: (r) =>
-          r._measurement == "sed_time" and
-          r.userID == "101"
-      )
-      |> group()
-      |> mean()
-"""
 # Util
 def parse_duration(s: str) -> timedelta:
     # basic parser for "1h", "24h", "7d"
@@ -47,7 +39,7 @@ def query_ema_lastn(query: TimesBasedEMAQuery) -> List[TimesBasedResponse]:
     stop = now.replace(tzinfo=None).isoformat() + "Z"
 
     flux = f'''
-    from(bucket: "{os.getenv("INFLUX_BUCKET")}")
+    from(bucket: "{INFLUX_BUCKET}")
       |> range(start: 0, stop: {stop})  // use a large enough window
       |> filter(fn: (r) =>
           r._measurement == "{query.type.value}" and
@@ -79,7 +71,7 @@ def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureRespons
     stop = now.replace(tzinfo=None).isoformat() + "Z"
 
     flux = f'''
-    from(bucket: "{os.getenv("INFLUX_BUCKET")}")
+    from(bucket: "{INFLUX_BUCKET}")
       |> range(start: {start}, stop: {stop})
       |> filter(fn: (r) =>
           r._measurement == "{query.fType.value}" and
