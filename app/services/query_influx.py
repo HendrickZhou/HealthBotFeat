@@ -11,7 +11,7 @@ import dateutil.parser
 logger = logging.getLogger(__name__)
 
 # InfluxDB setup
-INFLUX_BUCKET = "health_data"
+INFLUX_BUCKET = settings.influx_bucket
 
 client = InfluxDBClient(
     url=settings.influx_url,
@@ -32,8 +32,26 @@ def parse_duration(s: str) -> timedelta:
 def parse_now(now_str: str | None) -> datetime:
     return dateutil.parser.isoparse(now_str) if now_str else datetime.now(datetime.timezone.utc)
 
-######################
 
+
+######################
+# def get_aggregated_data(query: AggwrapFeatureQuery) -> List[]:
+    """
+    get the aggregated data
+    for each report of ema, get three levels of mean activity report: 15mins/1hour TODO: more resultion?
+    we should return structured result 
+    """
+    # query_window_data(WindowTimeFeatureQuery(userID=query.userID, ))
+    pass
+
+def get_deviation():
+    """
+    get the deviation from averages
+    """
+    pass
+
+
+######################
 def query_ema_lastn(query: TimesBasedEMAQuery) -> List[TimesBasedResponse]:
     now = parse_now(query.now)
     stop = now.replace(tzinfo=None).isoformat() + "Z"

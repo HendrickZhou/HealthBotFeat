@@ -3,7 +3,7 @@ from typing import Optional
 from enum import Enum
 
 # the str correspond to the measurement name for influxdb query
-class FeatEnum(str, Enum):
+class PAEnum(str, Enum):
     step_time = "step_time"
     stand_time = "stand_time"
     sed_time = "sed_time"
@@ -24,7 +24,20 @@ class EMAEnum(str, Enum):
     pcog = "per_cog"
     mindfulness = "mindfulness"
 
+# general type
+class MeanPASummary(BaseModel):
+    steptime: float
+    sedtime: float
+    standtime: float
+    uprtime: float
+    stepcount: float
+
 # Query Type
+class AggwrapFeatureQuery(BaseModel):
+    userID: str
+    now: str | None = None
+    lastn: int
+
 class WindowTimeFeatureQuery(BaseModel):
     """
     get result based on a time window 
@@ -32,7 +45,7 @@ class WindowTimeFeatureQuery(BaseModel):
     userID: str
     window: str = "1h"
     now: str | None = None  # Optional override for "current time"
-    fType: FeatEnum = FeatEnum.step_time
+    fType: PAEnum = PAEnum.step_time
 
 class DailyFeatureQuery(BaseModel):
     """
@@ -51,6 +64,12 @@ class TimesBasedEMAQuery(BaseModel):
     now: str | None = None
 
 # Response Type
+class AggwrapFeatureResponse(BaseModel):
+    userID: str
+    timestamp: str
+    last15: MeanPASummary
+    last1h: MeanPASummary
+
 class WindowTimeFeatureResponse(BaseModel):
     userID: str
     window: str
