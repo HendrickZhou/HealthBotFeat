@@ -26,19 +26,29 @@ class EMAEnum(str, Enum):
 
 # Query Type
 class WindowTimeFeatureQuery(BaseModel):
+    """
+    get result based on a time window 
+    """
     userID: str
     window: str = "1h"
     now: str | None = None  # Optional override for "current time"
     fType: FeatEnum = FeatEnum.step_time
 
 class DailyFeatureQuery(BaseModel):
+    """
+    get daily update type of result
+    """
     userID: str
     now: str | None = None
 
 class TimesBasedEMAQuery(BaseModel):
+    """
+    get result based on the last n times
+    """
     userID: str
     type: EMAEnum
     lastn: int = 1
+    now: str | None = None
 
 # Response Type
 class WindowTimeFeatureResponse(BaseModel):
@@ -50,6 +60,7 @@ class WindowTimeFeatureResponse(BaseModel):
 class TimesBasedResponse(BaseModel):
     userID: str
     value: float
+    timestamp: str
 
 class DailyFeatureResponse(BaseModel):
     userID: str

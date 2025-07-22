@@ -46,5 +46,5 @@ def get_demographics(user_id: str):
 
 # TODO: EMA feature
 @router.get("/ema", response_model=List[TimesBasedResponse])
-def get_ema(user_id: str, type: EMAEnum, lastn: int | None = None):
-    return query_ema_lastn(TimesBasedEMAQuery(user_id, type, lastn))
+def get_ema(userID: str, type: EMAEnum, lastn: int = 1, now: str | None = None):
+    return query_ema_lastn(TimesBasedEMAQuery(userID=userID, type=type, lastn=lastn, now=now))

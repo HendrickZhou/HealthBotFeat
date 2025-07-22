@@ -40,8 +40,35 @@ def parse_duration(s: str) -> timedelta:
 def parse_now(now_str: str | None) -> datetime:
     return dateutil.parser.isoparse(now_str) if now_str else datetime.now(datetime.timezone.utc)
 
+######################
+
 def query_ema_lastn(query: TimesBasedEMAQuery) -> List[TimesBasedResponse]:
-    pass
+    now = parse_now(query.now)
+    stop = now.replace(tzinfo=None).isoformat() + "Z"
+
+    flux = f'''
+    from(bucket: "{os.getenv("INFLUX_BUCKET")}")
+      |> range(start: 0, stop: {stop})  // use a large enough window
+      |> filter(fn: (r) =>
+          r._measurement == "{query.type.value}" and
+          r.userID == "{query.userID}"
+      )
+      |> sort(columns: ["_time"], desc: true)
+      |> limit(n: {query.lastn})
+    '''
+    logger.info(f"Running EMA lastn query for userID={query.userID}, type={query.type}, lastn={query.lastn}, now={stop}")
+    logger.info(f"running flux script: {flux}")
+    result = query_api.query(flux)
+
+    responses = []
+    for table in result:
+        for record in table.records:
+            responses.append(TimesBasedResponse(
+                userID=query.userID,
+                value=record.get_value(),
+                timestamp=record.get_time().isoformat()
+            ))
+    return responses
 
 def query_window_data(query: WindowTimeFeatureQuery) -> WindowTimeFeatureResponse:
     now = parse_now(query.now)
